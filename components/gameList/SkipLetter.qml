@@ -1,0 +1,56 @@
+import QtQuick 2.15
+
+Item {
+    property var letter;
+    property bool fade: false;
+
+    width: letterRect.width;
+    height: letterRect.height;
+
+    // Called explicitly by the skip handlers rather than driven off
+    // onLetterChanged, which got this wrong at both ends: it fired once at
+    // startup for the initial empty assignment (flashing a blank box), and it
+    // did NOT fire when a skip landed on the same letter twice in a row, so
+    // the second press gave no feedback at all.
+    function flash() {
+        if (letter === undefined || letter === '') return;
+
+        fade = false;
+        letterRect.opacity = 1;
+        fade = true;
+        letterRect.opacity = 0;
+    }
+
+    Rectangle {
+        id: letterRect;
+
+        color: theme.current.bgColor;
+        radius: 8;
+        width: root.height * .4;
+        height: root.height * .4;
+        border.color: theme.current.blurTextColor;
+        opacity: 0;
+
+        Text {
+            id: letterText;
+
+            text: letter;
+            color: theme.current.detailsColor;
+
+            font {
+                pixelSize: root.height * .2;
+                bold: true;
+            }
+
+            anchors {
+                verticalCenter: parent.verticalCenter;
+                horizontalCenter: parent.horizontalCenter;
+            }
+        }
+
+        Behavior on opacity {
+            enabled: fade;
+            PropertyAnimation { easing.type: Easing.InCubic; duration: 333; }
+        }
+    }
+}
