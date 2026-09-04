@@ -542,6 +542,13 @@ Item {
     // duplicated per mode like the 'inset' option is.
     Media.ScreenshotPreview {
         active: (theme.gridMode || theme.galleryMode) && !(theme.verticalMode && sidebarFocused);
+        // Grid mode only: swiping the grid can scroll the selected card off
+        // screen, and the panel shouldn't keep hanging over a card that
+        // isn't there. Gallery's carousel always keeps its selection
+        // centered, so the short-circuit leaves that mode exactly as it was
+        // (and avoids reading the grid's currentItem while its model is
+        // null).
+        targetOnScreen: !theme.gridMode || gameGrid.currentItemOnScreen;
 
         anchors {
             top: gameListHeader.bottom;

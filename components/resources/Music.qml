@@ -17,6 +17,7 @@ Item {
         // supported state - the Background Music setting then just has
         // nothing to play (see the itemCount guards further down).
 
+
     }
 
     function volumeCheck() {

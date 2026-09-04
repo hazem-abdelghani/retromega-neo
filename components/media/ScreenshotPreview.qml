@@ -29,8 +29,19 @@ Item {
         if (!value) resetDwell();
     }
 
+    // false while the card this panel belongs to has been scrolled out of
+    // sight. Only Grid mode can actually get into that state (its GridView
+    // scrolls independently of the selection), so that's the only caller
+    // that passes anything but the default - see GameGrid.qml's
+    // currentItemOnScreen. Deliberately folded into enabled_ below rather
+    // than gating `visible` on its own: that way scrolling the card away
+    // clears the dwell like every other disqualifying condition does, and
+    // scrolling it back runs the usual preload + dwell wait instead of
+    // popping the panel in and out as cards cross the edge mid-flick.
+    property bool targetOnScreen: true;
+
     readonly property bool modeActive: theme.gridMode || theme.galleryMode;
-    readonly property bool enabled_: active && modeActive && screenshotPreview;
+    readonly property bool enabled_: active && modeActive && screenshotPreview && targetOnScreen;
 
     readonly property string screenshotSrc: {
         if (!currentGame || !currentGame.assets) return '';

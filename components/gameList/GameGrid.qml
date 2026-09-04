@@ -26,6 +26,32 @@ Item {
     // model, so the other two aren't building delegates behind it
     readonly property bool modeActive: theme.gridMode;
 
+    // Grid is the one Display Mode with a viewport that can move
+    // independently of the selection: the GridView below is `interactive`,
+    // so a swipe scrolls the view without touching currentIndex, and the
+    // selected card can end up completely off screen. Key/pad navigation
+    // can't cause this - setting currentIndex scrolls the view along to keep
+    // the current item in view - so this only ever goes false after a touch
+    // scroll. Reported up to gameList/Component.qml, where the Screenshot
+    // Preview panel uses it to get out of the way: that panel is about the
+    // selected game specifically, so it has no business floating over the
+    // grid while the card it belongs to isn't visible.
+    //
+    // Vertical only - the grid never scrolls sideways. Any overlap at all
+    // counts as on screen, so the panel doesn't blink out while a card is
+    // half-way past the edge.
+    readonly property bool currentItemOnScreen: {
+        const item = grid.currentItem;
+        // a GridView keeps the current delegate alive even once it scrolls
+        // out of the visible range, so a null here means there's no
+        // selection at all (empty collection) rather than one that's merely
+        // off screen - and either way there's nothing to preview
+        if (!item) return false;
+
+        const top = item.y - grid.contentY;
+        return (top + item.height) > 0 && top < grid.height;
+    }
+
     onModeActiveChanged: {
         if (!modeActive) return;
 
