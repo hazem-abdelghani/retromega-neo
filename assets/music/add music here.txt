@@ -1,0 +1,13 @@
+Background music goes in this folder.
+
+1. Copy your .mp3 files in here, next to this text file.
+2. Open ../../components/resources/Music.qml and add one line per track
+   inside the Playlist block, following the ones already there:
+
+       PlaylistItem { source: '../../assets/music/your track.mp3'; }
+
+3. Turn "Background Music" on in the theme's Settings screen.
+
+The playlist is shuffled and looped. If you delete every PlaylistItem line
+the playlist is simply empty and the setting has nothing to play - that's a
+supported state, nothing will break.
