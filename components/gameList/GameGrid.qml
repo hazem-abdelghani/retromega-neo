@@ -357,14 +357,25 @@ Item {
                     Behavior on opacity { NumberAnimation { duration: 120; } }
                 }
 
-                Text {
+                // Marquee title: only ever shown for the current card (same
+                // as the 2-line wrap it replaces), so there's no separate
+                // "selected" state to key off - it's static, single-line and
+                // right-elided when the title fits, or scrolls left (after a
+                // 1s pause) when it doesn't.
+                Item {
+                    id: gridTitleContainer;
+
                     visible: cell.isCurrent && !cell.showLogo;
-                    text: title;
-                    color: '#ffffff';
-                    elide: Text.ElideRight;
-                    wrapMode: Text.WordWrap;
-                    maximumLineCount: 2;
-                    horizontalAlignment: Text.AlignHCenter;
+                    clip: true;
+                    height: gridTitleText1.implicitHeight;
+
+                    property bool needsScroll: gridTitleText1.implicitWidth > gridTitleContainer.width;
+                    property real scrollOffset: 0;
+                    property real cycleWidth: gridTitleText1.implicitWidth + gridTitleSep.implicitWidth;
+                    // recycled delegates swap games under the same cell, so
+                    // this restarts the animation on a new title even when
+                    // needsScroll doesn't change (two long titles in a row)
+                    property string trackedTitle: title;
 
                     anchors {
                         left: parent.left;
@@ -373,9 +384,94 @@ Item {
                         margins: 8;
                     }
 
-                    font {
-                        pixelSize: parent.height * .075;
-                        bold: true;
+                    Text {
+                        id: gridTitleText1;
+                        text: title;
+                        color: '#ffffff';
+                        elide: gridTitleContainer.needsScroll ? Text.ElideNone : Text.ElideRight;
+                        horizontalAlignment: Text.AlignHCenter;
+                        width: gridTitleContainer.needsScroll ? implicitWidth : gridTitleContainer.width;
+                        x: -gridTitleContainer.scrollOffset;
+
+                        font {
+                            pixelSize: art.height * .075;
+                            bold: true;
+                        }
+                    }
+
+                    Text {
+                        id: gridTitleSep;
+                        text: "  •  ";
+                        color: '#ffffff';
+                        visible: gridTitleContainer.needsScroll;
+                        x: gridTitleText1.implicitWidth - gridTitleContainer.scrollOffset;
+
+                        font {
+                            pixelSize: art.height * .075;
+                            bold: true;
+                        }
+                    }
+
+                    Text {
+                        id: gridTitleText2;
+                        text: title;
+                        color: '#ffffff';
+                        visible: gridTitleContainer.needsScroll;
+                        x: gridTitleText1.implicitWidth + gridTitleSep.implicitWidth - gridTitleContainer.scrollOffset;
+
+                        font {
+                            pixelSize: art.height * .075;
+                            bold: true;
+                        }
+                    }
+
+                    SequentialAnimation {
+                        id: gridTitleMarqueeAnim;
+                        loops: Animation.Infinite;
+                        running: false;
+
+                        PropertyAction {
+                            target: gridTitleContainer;
+                            property: "scrollOffset";
+                            value: 0;
+                        }
+
+                        PauseAnimation { duration: 1000; }
+
+                        NumberAnimation {
+                            target: gridTitleContainer;
+                            property: "scrollOffset";
+                            from: 0;
+                            to: gridTitleContainer.cycleWidth;
+                            duration: gridTitleContainer.cycleWidth * 22;
+                            easing.type: Easing.Linear;
+                        }
+                    }
+
+                    onVisibleChanged: {
+                        gridTitleContainer.scrollOffset = 0;
+                        gridTitleMarqueeAnim.stop();
+                        if (visible && needsScroll) {
+                            gridTitleMarqueeAnim.start();
+                        }
+                    }
+
+                    onNeedsScrollChanged: {
+                        if (visible && needsScroll) {
+                            gridTitleContainer.scrollOffset = 0;
+                            gridTitleMarqueeAnim.start();
+                        } else {
+                            gridTitleMarqueeAnim.stop();
+                            gridTitleContainer.scrollOffset = 0;
+                        }
+                    }
+
+                    onTrackedTitleChanged: {
+                        gridTitleMarqueeAnim.stop();
+                        gridTitleContainer.scrollOffset = 0;
+                        if (visible && needsScroll) {
+                            gridTitleMarqueeAnim.start();
+                        }
                     }
                 }
 

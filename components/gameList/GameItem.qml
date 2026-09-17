@@ -2,6 +2,8 @@ import QtQuick 2.15
 import QtGraphicalEffects 1.12
 
 Item {
+    id: gameItemRoot;
+
     property bool showFavorite: {
         return favorite
             && currentCollection
@@ -70,29 +72,130 @@ Item {
         }
     }
 
-    Text {
-        id: gameTitle;
+    // Marquee title: behaves exactly like the plain elided Text this
+    // replaces when the row is unselected or the title already fits, but
+    // once a too-long title is focused it scrolls left to reveal the rest,
+    // looping with a bullet separator - ported from Flat Ozone's
+    // GameListView.qml gameMarqueeContainer.
+    Item {
+        id: gameTitleContainer;
 
         visible: !showLogo;
-        text: title;
-        verticalAlignment: Text.AlignVCenter;
-        elide: Text.ElideRight;
-        color: (active && gamesListView.currentIndex === index)
-            ? theme.current.focusTextColor
-            : theme.current.blurTextColor;
+        clip: true;
         height: parent.height;
 
-        font {
-            pixelSize: parent.height * .43;
-            letterSpacing: -0.3;
-            bold: true;
-        }
+        property bool isSelected: active && gamesListView.currentIndex === index;
+        property bool needsScroll: gameTitleText1.implicitWidth > gameTitleContainer.width;
+        property real scrollOffset: 0;
+        property real cycleWidth: gameTitleText1.implicitWidth + gameTitleSep.implicitWidth;
 
         anchors {
             left: parent.left;
             leftMargin: 12;
             right: parent.right;
             rightMargin: showFavorite ? parent.height * .36 + 10 : 10;
+        }
+
+        Text {
+            id: gameTitleText1;
+            text: title;
+            verticalAlignment: Text.AlignVCenter;
+            elide: gameTitleContainer.isSelected ? Text.ElideNone : Text.ElideRight;
+            width: gameTitleContainer.isSelected ? implicitWidth : gameTitleContainer.width;
+            height: parent.height;
+            x: -gameTitleContainer.scrollOffset;
+            color: gameTitleContainer.isSelected
+                ? theme.current.focusTextColor
+                : theme.current.blurTextColor;
+
+            font {
+                pixelSize: gameItemRoot.height * .43;
+                letterSpacing: -0.3;
+                bold: true;
+            }
+        }
+
+        Text {
+            id: gameTitleSep;
+            text: "  •  ";
+            verticalAlignment: Text.AlignVCenter;
+            elide: Text.ElideNone;
+            height: parent.height;
+            x: gameTitleText1.implicitWidth - gameTitleContainer.scrollOffset;
+            visible: gameTitleContainer.needsScroll;
+            color: gameTitleContainer.isSelected
+                ? theme.current.focusTextColor
+                : theme.current.blurTextColor;
+
+            font {
+                pixelSize: gameItemRoot.height * .43;
+                letterSpacing: -0.3;
+                bold: true;
+            }
+        }
+
+        Text {
+            id: gameTitleText2;
+            text: title;
+            verticalAlignment: Text.AlignVCenter;
+            elide: Text.ElideNone;
+            height: parent.height;
+            x: gameTitleText1.implicitWidth + gameTitleSep.implicitWidth - gameTitleContainer.scrollOffset;
+            visible: gameTitleContainer.needsScroll;
+            color: gameTitleContainer.isSelected
+                ? theme.current.focusTextColor
+                : theme.current.blurTextColor;
+
+            font {
+                pixelSize: gameItemRoot.height * .43;
+                letterSpacing: -0.3;
+                bold: true;
+            }
+        }
+
+        // Pauses 1s on the start of the title (scrollOffset reset instantly
+        // via PropertyAction, not animated, so the loop restart is a plain
+        // snap rather than a visible reverse-slide) before scrolling once
+        // through, then repeats.
+        SequentialAnimation {
+            id: gameTitleMarqueeAnim;
+            loops: Animation.Infinite;
+            running: false;
+
+            PropertyAction {
+                target: gameTitleContainer;
+                property: "scrollOffset";
+                value: 0;
+            }
+
+            PauseAnimation { duration: 1000; }
+
+            NumberAnimation {
+                target: gameTitleContainer;
+                property: "scrollOffset";
+                from: 0;
+                to: gameTitleContainer.cycleWidth;
+                duration: gameTitleContainer.cycleWidth * 22;
+                easing.type: Easing.Linear;
+            }
+        }
+
+        onIsSelectedChanged: {
+            gameTitleContainer.scrollOffset = 0;
+            gameTitleMarqueeAnim.stop();
+            if (isSelected && needsScroll) {
+                gameTitleMarqueeAnim.start();
+            }
+        }
+
+        onNeedsScrollChanged: {
+            if (isSelected && needsScroll) {
+                gameTitleContainer.scrollOffset = 0;
+                gameTitleMarqueeAnim.start();
+            } else {
+                gameTitleMarqueeAnim.stop();
+                gameTitleContainer.scrollOffset = 0;
+            }
         }
     }
 
