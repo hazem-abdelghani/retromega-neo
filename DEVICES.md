@@ -11,17 +11,16 @@
 
 ## The bundled artwork sets
 
-There are four sets, all keyed off a collection's shortname:
+There are three sets, all keyed off a collection's shortname:
 
 |folder|used by|
 |------|-------|
 |`/assets/images/devices/`|the device art on the Collection Screen, and the preview shown beside the sidebar|
-|`/assets/images/devicesCompact/`|the same, when the `Compact Device Art` setting is on|
 |`/assets/images/icons/`|the per-console icons in the Sidebar display mode|
 |`/assets/images/collections/`|the platform logos used by the `Replace Collection Names with Logos` setting|
 
-`devices`, `devicesCompact` and `icons` hold the same 38 filenames, so a
-shortname that resolves to a name in one resolves in all three. `collections`
+`devices` and `icons` hold the same 38 filenames, so a
+shortname that resolves to a name in one resolves in both. `collections`
 holds 42 logos and covers a slightly different set - `CollectionData.qml`'s
 `logoImages` array is the list of which ones exist, and a platform that isn't
 in it falls back to its text name instead of showing a broken image.
@@ -31,7 +30,8 @@ in it falls back to its text name instead of showing a broken image.
 ## Create Your Own
 
 - add image files into `/assets/images/devices/shortname.png`
-    - add a matching file to `devicesCompact/` and `icons/` too - all three
+    - the bundled pads fit within 1920x1400; if yours are larger, make them from the full-size original, scaling down once with a Lanczos filter, never from an already-shrunk copy
+    - add a matching file to `icons/` too - both
       sets fall back to their own `default.png` when a file is missing, so a
       gap shows the generic console rather than an empty space
     - images should not have any padding, but can be worked around if it does

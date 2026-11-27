@@ -197,7 +197,8 @@ Item {
             id: row;
 
             width: platformsListView.width;
-            height: itemHeight;
+            // see GameScroll.qml: never a zero or negative height
+            height: Math.max(1, itemHeight);
 
             // order holds shortNames now; api.collections.get() still wants a
             // position, hence the lookup map on the theme root
@@ -280,6 +281,8 @@ Item {
                     font.pixelSize: row.height * .32;
 
                     MouseArea {
+
+                        cursorShape: Qt.PointingHandCursor;
                         anchors.fill: parent;
                         enabled: index > 0;
 
@@ -301,6 +304,8 @@ Item {
                     font.pixelSize: row.height * .32;
 
                     MouseArea {
+
+                        cursorShape: Qt.PointingHandCursor;
                         anchors.fill: parent;
                         enabled: index < platformsPaneRoot.order.length - 1;
 
@@ -316,6 +321,8 @@ Item {
             }
 
             MouseArea {
+
+                cursorShape: Qt.PointingHandCursor;
                 anchors.fill: parent;
                 z: -1;
                 onClicked: {

@@ -366,6 +366,9 @@ FocusScope {
         theme.setColorTheme(settings.get('colorTheme'));
         theme.setControllerLayout(settings.get('controllerLayout'));
         theme.setFontScale();
+        theme.setAccentColor(settings.get('accentColor'));
+        theme.setOverscan(settings.get('overscan'));
+        theme.setLargeTargets(settings.get('largeTapTargets'));
 
         // Display Mode switches between List, Sidebar, Grid and Gallery
         // live, without needing a restart.
@@ -661,48 +664,68 @@ FocusScope {
     }
 
 
-    // ui components
-    CollectionList.Component {
-        id: collectionList;
-
-        visible: currentView === 'collectionList';
-        focus: currentView === 'collectionList';
+    // The empty edge Overscan Margin leaves around the screen is this colour.
+    // Behind everything, so with the setting off it is never seen
+    Rectangle {
+        anchors.fill: parent;
+        color: theme.current.bgColor;
     }
 
-    GameList.Component {
-        id: gameList;
+    // Everything the user sees lives in here, inset by the Overscan Margin
+    // setting on every side (for TVs that crop the edges of the picture).
+    // Components size themselves from safeArea.width/height, not root's.
+    FocusScope {
+        id: safeArea;
 
-        visible: currentView === 'gameList';
-        focus: currentView === 'gameList';
+        focus: true;
+
+        anchors {
+            fill: parent;
+            leftMargin: root.width * theme.overscan;
+            rightMargin: root.width * theme.overscan;
+            topMargin: root.height * theme.overscan;
+            bottomMargin: root.height * theme.overscan;
+        }
+
+        // ui components
+        CollectionList.Component {
+            id: collectionList;
+
+            visible: currentView === 'collectionList';
+            focus: currentView === 'collectionList';
+        }
+
+        GameList.Component {
+            id: gameList;
+
+            visible: currentView === 'gameList';
+            focus: currentView === 'gameList';
+        }
+
+        GameDetails.Component {
+            visible: currentView === 'gameDetails';
+            focus: currentView === 'gameDetails';
+        }
+
+        Settings.Component {
+            id: settingsComponent;
+
+            visible: currentView === 'settings';
+            focus: currentView === 'settings';
+        }
+
+        Sorting.Component {
+            id: sortingComponent;
+
+            visible: currentView === 'sorting';
+            focus: currentView === 'sorting';
+        }
+
+        Attract.Component {
+            id: attractComponent;
+
+            visible: currentView === 'attract';
+            focus: currentView === 'attract';
+        }
     }
-
-    GameDetails.Component {
-        visible: currentView === 'gameDetails';
-        focus: currentView === 'gameDetails';
-    }
-
-    Settings.Component {
-        id: settingsComponent;
-
-        visible: currentView === 'settings';
-        focus: currentView === 'settings';
-    }
-
-    Sorting.Component {
-        id: sortingComponent;
-
-        visible: currentView === 'sorting';
-        focus: currentView === 'sorting';
-    }
-
-    Attract.Component {
-        id: attractComponent;
-
-        visible: currentView === 'attract';
-        focus: currentView === 'attract';
-    }
-
-    /* Text { id: debug; x: 20; y: 20; width: 20; height: 20; text: 'debug'; color: 'magenta'; } */
-    /* Rectangle { width: 640; height: 480; color: 'transparent'; border.color: 'magenta'; } */
-    /* Rectangle { width: 1280; height: 720; color: 'transparent'; border.color: 'magenta'; } */
 }

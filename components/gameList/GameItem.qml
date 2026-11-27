@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 import QtGraphicalEffects 1.12
 
 Item {
@@ -51,6 +52,8 @@ Item {
     }
 
     MouseArea {
+
+        cursorShape: Qt.PointingHandCursor;
         anchors.fill: parent;
 
         onClicked: {
@@ -62,13 +65,15 @@ Item {
             }
         }
 
+        // a long press selects the game if it isn't already, then opens the
+        // game menu (Launch / Favorite / Details)
         onPressAndHold: {
-            if (gamesListView.currentIndex === index) {
-                onDetailsPressed();
-            } else {
+            if (gamesListView.currentIndex !== index) {
                 const updated = updateGameIndex(index);
                 if (updated) { sounds.nav(); }
             }
+
+            openGameMenu();
         }
     }
 
@@ -209,10 +214,12 @@ Item {
         verticalAlignment: Image.AlignVCenter;
         asynchronous: true;
         smooth: true;
+        mipmap: true;
         height: parent.height * .78;
         // logos are drawn one row tall; decoding them at full size was the
         // expensive half of turning on "Replace Game Names with Logos"
-        sourceSize.height: Math.round(height);
+        // x devicePixelRatio: decode at the final physical pixel size
+        sourceSize.height: Math.round(height * Screen.devicePixelRatio);
 
         layer.enabled: logoDropShadow;
         layer.effect: DropShadow {

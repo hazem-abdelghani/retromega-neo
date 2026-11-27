@@ -1,5 +1,8 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 import QtGraphicalEffects 1.12
+
+import '../swipe' as Swipe
 
 // Horizontal coverflow layout for the Game List screen (Display Mode:
 // Gallery): the current game's box art sits large and centered, with
@@ -66,7 +69,8 @@ Item {
     // immediately - see theme.qml's note on why a direct binding to
     // settings.get() never reacts to later changes
     property bool preferBox: settings.get('preferBox');
-    property bool darkMode: settings.get('colorTheme') === 'dark';
+    // follows the theme's own background: only Light and Diamond are light
+    readonly property bool darkMode: theme.current.isDark;
     property bool logoTitles: settings.get('logoTitles');
     property bool logoDropShadow: settings.get('dropShadow');
     property string cardsSize: settings.get('cardsSize');
@@ -82,7 +86,6 @@ Item {
     property bool muteStartup: true;
 
     function preferBoxCallback(value) { preferBox = value; }
-    function darkModeCallback(value) { darkMode = (value === 'dark'); }
     function logoTitlesCallback(value) { logoTitles = value; }
     function logoDropShadowCallback(value) { logoDropShadow = value; }
     function cardsSizeCallback(value) { cardsSize = value; }
@@ -90,7 +93,6 @@ Item {
 
     Component.onCompleted: {
         settings.addCallback('preferBox', preferBoxCallback);
-        settings.addCallback('colorTheme', darkModeCallback);
         settings.addCallback('logoTitles', logoTitlesCallback);
         settings.addCallback('dropShadow', logoDropShadowCallback);
         settings.addCallback('cardsSize', cardsSizeCallback);
@@ -115,7 +117,6 @@ Item {
 
     Component.onDestruction: {
         settings.removeCallback('preferBox', preferBoxCallback);
-        settings.removeCallback('colorTheme', darkModeCallback);
         settings.removeCallback('logoTitles', logoTitlesCallback);
         settings.removeCallback('dropShadow', logoDropShadowCallback);
         settings.removeCallback('cardsSize', cardsSizeCallback);
@@ -210,9 +211,21 @@ Item {
             height: gameGalleryRoot.featuredH + 24;
             orientation: ListView.Horizontal;
             // swipe to scroll through the strip (tap-to-select still works
-            // via the delegate's MouseArea below); was previously false,
-            // which silently disabled touch scrolling in this Display Mode
+            // via the delegate's MouseArea below): the strip follows the
+            // finger and a longer or faster swipe carries further, snapping to
+            // a card, like swiping through a photo gallery app. Not affected
+            // by the Swipe Paging setting
             interactive: true;
+            // How far a swipe coasts after you let go is about speed squared
+            // divided by this deceleration. The defaults (1500, capped at
+            // 2500px/s) coasted a slow, short swipe past several cards and a
+            // hard fling barely further. Measured with simulated swipes:
+            //   slow 400px swipe   4 cards -> 2
+            //   fast 700px swipe   7 cards -> 9
+            //   hard 1200px fling  8 cards -> 22
+            // while a 200px flick still moves one card
+            flickDeceleration: 4000;
+            maximumFlickVelocity: 8000;
             clip: false;
             spacing: 24;
             model: gameGalleryRoot.modeActive ? currentGameList : null;
@@ -262,8 +275,11 @@ Item {
                 readonly property real aspect: (cardImage.status === Image.Ready && cardImage.implicitHeight > 0)
                     ? (cardImage.implicitWidth / cardImage.implicitHeight)
                     : gameGalleryRoot.fallbackAspect;
-                width: (isCurrent ? gameGalleryRoot.featuredH : gameGalleryRoot.thumbH) * aspect;
-                height: carousel.height;
+                // never less than a pixel: a card with no width makes the strip
+                // build a delegate for every game while the layout is still
+                // settling (see GameScroll.qml's note on the same thing)
+                width: Math.max(1, (isCurrent ? gameGalleryRoot.featuredH : gameGalleryRoot.thumbH) * aspect);
+                height: Math.max(1, carousel.height);
 
                 Behavior on width { enabled: card.animateSize; NumberAnimation { duration: 200; easing.type: Easing.OutQuad; } }
 
@@ -316,7 +332,9 @@ Item {
                         // sized off the featured card (the largest a card ever
                         // gets), not the card's own animating size, so growing
                         // and shrinking a card never reloads its art
-                        sourceSize.height: Math.round(gameGalleryRoot.featuredH);
+                        // x devicePixelRatio: decode at the final physical
+                        // pixel size of the largest card
+                        sourceSize.height: Math.round(gameGalleryRoot.featuredH * Screen.devicePixelRatio);
 
                         // releases the size-animation suppression above once
                         // this delegate's new art has settled one way or the other
@@ -379,6 +397,8 @@ Item {
                 }
 
                 MouseArea {
+
+                    cursorShape: Qt.PointingHandCursor;
                     anchors.fill: parent;
 
                     onClicked: {
@@ -390,13 +410,15 @@ Item {
                         }
                     }
 
+                    // a long press selects the game if it isn't already, then
+                    // opens the game menu (Launch / Favorite / Details)
                     onPressAndHold: {
-                        if (carousel.currentIndex === index) {
-                            onDetailsPressed();
-                        } else {
+                        if (carousel.currentIndex !== index) {
                             const updated = updateGameIndex(index);
                             if (updated) { sounds.nav(); }
                         }
+
+                        openGameMenu();
                     }
                 }
             }
@@ -456,7 +478,10 @@ Item {
                     fillMode: Image.PreserveAspectFit;
                     asynchronous: true;
                     smooth: true;
+                    mipmap: true;
                     height: gameGalleryRoot.height * .09;
+                    // logos were decoded at their full scraped size
+                    sourceSize.height: Math.round(gameGalleryRoot.height * .09 * Screen.devicePixelRatio);
                     // Follows the logo's own aspect ratio, capped at half the
                     // screen. A fixed width reserved that much space in the
                     // Row no matter how narrow the logo actually drew, so the
@@ -488,5 +513,18 @@ Item {
         id: skipLetter;
 
         anchors.centerIn: gameGalleryRoot;
+    }
+
+    // The mouse wheel moves one game per notch, like the Left/Right keys. A
+    // list that scrolls sideways ignores a plain (vertical) wheel, so without
+    // this the wheel did nothing here. A sideways wheel is left to the list
+    // itself, which already scrolls for it
+    Swipe.WheelStepper {
+        active: gameGalleryRoot.modeActive && gameGalleryRoot.active;
+        sideways: false;
+        onStepRequested: {
+            const updated = updateGameIndex(currentGameIndex + step);
+            if (updated) sounds.nav();
+        }
     }
 }

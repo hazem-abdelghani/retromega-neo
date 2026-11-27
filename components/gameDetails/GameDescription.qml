@@ -16,7 +16,7 @@ Item {
     }
 
     function scrollDown() {
-        // clamped against the flickable's own viewport rather than root.height
+        // clamped against the flickable's own viewport rather than safeArea.height
         // - the two happen to be near-identical here, but the bound belongs to
         // the thing actually doing the scrolling. Floored at the resting
         // position too, so a description shorter than the viewport can't be
@@ -73,8 +73,8 @@ Item {
     }
 
     FastBlur {
-        width: root.width;
-        height: root.height;
+        width: safeArea.width;
+        height: safeArea.height;
         radius: 80;
         opacity: .4;
         source: blurSource;
@@ -101,7 +101,7 @@ Item {
         Text {
             id: fullDesc;
 
-            width: root.width - flickable.leftMargin - flickable.rightMargin;
+            width: safeArea.width - flickable.leftMargin - flickable.rightMargin;
             text: fullDescText;
             wrapMode: Text.WordWrap;
             lineHeight: 1.2;
@@ -109,7 +109,7 @@ Item {
             horizontalAlignment: Text.AlignJustify;
 
             font {
-                pixelSize: root.height * .045 * theme.fontScale;
+                pixelSize: safeArea.height * .045 * theme.fontScale;
                 letterSpacing: -0.35;
                 bold: true;
             }

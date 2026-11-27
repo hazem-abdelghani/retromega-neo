@@ -252,17 +252,17 @@ Item {
         opacity: .6;
 
         font {
-            pixelSize: root.height * .06;
+            pixelSize: safeArea.height * .06;
             bold: true;
         }
 
         anchors {
             top: parent.top;
-            topMargin: root.height * .025;
+            topMargin: safeArea.height * .025;
             left: parent.left;
-            leftMargin: root.width * .03;
+            leftMargin: safeArea.width * .03;
             right: parent.right;
-            rightMargin: root.width * .03;
+            rightMargin: safeArea.width * .03;
         }
     }
 
@@ -281,17 +281,17 @@ Item {
         opacity: .6;
 
         font {
-            pixelSize: root.height * .06;
+            pixelSize: safeArea.height * .06;
             bold: true;
         }
 
         anchors {
             bottom: parent.bottom;
-            bottomMargin: root.height * .025;
+            bottomMargin: safeArea.height * .025;
             left: parent.left;
-            leftMargin: root.width * .03;
+            leftMargin: safeArea.width * .03;
             right: parent.right;
-            rightMargin: root.width * .03;
+            rightMargin: safeArea.width * .03;
         }
     }
 }

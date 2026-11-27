@@ -3,11 +3,11 @@ import QtQuick 2.15
 Item {
     property var keys: [
         // Appearance
-        'displayMode', 'cardsSize', 'fontSize', 'colorTheme', 'compactDeviceArt', 'collectionLogos', 'logoTitles', 'dropShadow', 'roundedCards',
+        'displayMode', 'cardsSize', 'fontSize', 'colorTheme', 'accentColor', 'overscan', 'collectionLogos', 'logoTitles', 'dropShadow', 'roundedCards', 'swipePaging',
         // Sound
         'bgMusic', 'navSounds',
         // Controls
-        'controllerLayout',
+        'controllerLayout', 'largeTapTargets',
         // Date & Time
         'twentyFourHour',
         // Media & Artwork
@@ -37,6 +37,8 @@ Item {
         'cardsSize': 'select',
         'fontSize': 'select',
         'colorTheme': 'select',
+        'accentColor': 'select',
+        'overscan': 'select',
         'controllerLayout': 'select',
         'cycleArt': 'select',
     }
@@ -45,8 +47,10 @@ Item {
         'displayMode': ['list', 'sidebar', 'grid', 'gallery'],
         'cardsSize': ['small', 'medium', 'large'],
         'fontSize': ['large', 'medium', 'small'],
-        'colorTheme': ['light', 'dark'],
-        'controllerLayout': ['switch', 'xbox'],
+        'colorTheme': ['light', 'dark', 'black', 'sapphire', 'ruby', 'emerald', 'amethyst', 'amber', 'aquamarine', 'diamond'],
+        'accentColor': ['default', 'blue', 'green', 'orange', 'red', 'purple', 'pink', 'yellow'],
+        'overscan': ['off', '2', '4', '6', '8'],
+        'controllerLayout': ['switch', 'xbox', 'playstation'],
         'cycleArt': ['all', 'common', 'boxes', 'screens'],
     }
 
@@ -54,8 +58,15 @@ Item {
         'displayMode': { 'list': 'List', 'sidebar': 'Sidebar', 'grid': 'Grid', 'gallery': 'Gallery' },
         'cardsSize': { 'small': 'Small', 'medium': 'Medium', 'large': 'Large' },
         'fontSize': { 'large': 'Large', 'medium': 'Medium', 'small': 'Small' },
-        'colorTheme': { 'light': 'Light', 'dark': 'Dark' },
-        'controllerLayout': { 'switch': 'Switch', 'xbox': 'Xbox' },
+        'colorTheme': {
+            'light': 'Light', 'dark': 'Dark', 'black': 'Black', 'sapphire': 'Sapphire', 'ruby': 'Ruby',
+            'emerald': 'Emerald', 'amethyst': 'Amethyst', 'amber': 'Amber', 'aquamarine': 'Aquamarine',
+            'diamond': 'Diamond'
+        },
+        'accentColor': { 'default': 'Default', 'blue': 'Blue', 'green': 'Green', 'orange': 'Orange', 'red': 'Red', 'purple': 'Purple', 'pink': 'Pink', 'yellow': 'Yellow' },
+        // percent of the screen's width and height left empty on each side
+        'overscan': { 'off': 'Off', '2': '2%', '4': '4%', '6': '6%', '8': '8%' },
+        'controllerLayout': { 'switch': 'Switch', 'xbox': 'Xbox', 'playstation': 'PlayStation' },
         // kept to roughly the width of "Sidebar"/"Gallery" - the value
         // column in SettingsItem is a fixed width and elides past that
         'cycleArt': { 'all': 'All Art', 'common': 'Common', 'boxes': 'Box Art', 'screens': 'Screens' },
@@ -238,7 +249,11 @@ Item {
         'bgMusic': false,
         'navSounds': true,
         'colorTheme': 'light',
+        'accentColor': 'default',
+        'overscan': 'off',
         'controllerLayout': 'xbox',
+        // off by default: it makes the footer and header bigger
+        'largeTapTargets': false,
         'twentyFourHour': false,
         'fontSize': 'medium',
         'preferBox': true,
@@ -250,6 +265,9 @@ Item {
         // on by default: this is how the cards have always looked, and the
         // setting exists to trade that away for speed, not the other way round
         'roundedCards': true,
+        // on by default: one collection/game/row per swipe, like paging
+        // through photos. Off gives back free-scrolling flicks
+        'swipePaging': true,
         'logoTitles': false,
         'attractTitle': true,
         'favoritesOnTop': false,
@@ -258,7 +276,6 @@ Item {
         'startOnAllGames': true,
         'showRecents': true,
         'showFavorites': true,
-        'compactDeviceArt': false,
         'collectionLogos': false,
     }
 
@@ -270,7 +287,10 @@ Item {
         'bgMusic': null,
         'navSounds': null,
         'colorTheme': null,
+        'accentColor': null,
+        'overscan': null,
         'controllerLayout': null,
+        'largeTapTargets': null,
         'twentyFourHour': null,
         'fontSize': null,
         'preferBox': null,
@@ -280,6 +300,7 @@ Item {
         'quickVideo': null,
         'dropShadow': null,
         'roundedCards': null,
+        'swipePaging': null,
         'logoTitles': null,
         'attractTitle': null,
         'favoritesOnTop': null,
@@ -288,7 +309,6 @@ Item {
         'startOnAllGames': null,
         'showRecents': null,
         'showFavorites': null,
-        'compactDeviceArt': null,
         'collectionLogos': null,
     }
 
@@ -300,7 +320,10 @@ Item {
         'bgMusic': [],
         'navSounds': [],
         'colorTheme': [],
+        'accentColor': [],
+        'overscan': [],
         'controllerLayout': [],
+        'largeTapTargets': [],
         'twentyFourHour': [],
         'fontSize': [],
         'preferBox': [],
@@ -310,6 +333,7 @@ Item {
         'quickVideo': [],
         'dropShadow': [],
         'roundedCards': [],
+        'swipePaging': [],
         'logoTitles': [],
         'attractTitle': [],
         'favoritesOnTop': [],
@@ -318,7 +342,6 @@ Item {
         'startOnAllGames': [],
         'showRecents': [],
         'showFavorites': [],
-        'compactDeviceArt': [],
         'collectionLogos': [],
     }
 
@@ -328,7 +351,10 @@ Item {
         'bgMusic': 'Background Music',
         'navSounds': 'Navigation Sounds',
         'colorTheme': 'Theme',
+        'accentColor': 'Accent Color',
+        'overscan': 'Overscan Margin',
         'controllerLayout': 'Controller Layout',
+        'largeTapTargets': 'Larger Tap Targets',
         'twentyFourHour': 'Use 24-Hour Format',
         'fontSize': 'Font Size',
         'cycleArt': 'Cycle Art Types',
@@ -340,6 +366,7 @@ Item {
         'quickVideo': 'Shorter Video Delay',
         'dropShadow': 'Artwork Drop Shadow',
         'roundedCards': 'Rounded Card Corners',
+        'swipePaging': 'Swipe Paging',
         'logoTitles': 'Replace Game Names with Logos',
         'attractTitle': 'Game Title on Attract Mode',
         'favoritesOnTop': 'Favorites on Top',
@@ -348,7 +375,6 @@ Item {
         'startOnAllGames': 'Start on All Games',
         'showRecents': 'Show Last Played Collection',
         'showFavorites': 'Show Favorites Collection',
-        'compactDeviceArt': 'Compact Device Art',
         'collectionLogos': 'Replace Collection Names with Logos',
     }
 }

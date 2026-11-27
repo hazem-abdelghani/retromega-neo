@@ -149,6 +149,11 @@ Item {
     Keys.onUpPressed: {
         event.accepted = true;
 
+        if (gameMenu.open) {
+            gameMenu.move(-1);
+            return;
+        }
+
         if (theme.verticalMode && sidebarFocused) {
             moveCollection(-1);
             return;
@@ -169,6 +174,11 @@ Item {
 
     Keys.onDownPressed: {
         event.accepted = true;
+
+        if (gameMenu.open) {
+            gameMenu.move(1);
+            return;
+        }
 
         if (theme.verticalMode && sidebarFocused) {
             moveCollection(1);
@@ -196,6 +206,8 @@ Item {
     Keys.onLeftPressed: {
         event.accepted = true;
 
+        if (gameMenu.open) return;
+
         if (theme.gridMode || theme.galleryMode) {
             const updated = updateGameIndex(currentGameIndex - 1);
             if (updated) { sounds.nav(); }
@@ -217,6 +229,8 @@ Item {
 
     Keys.onRightPressed: {
         event.accepted = true;
+
+        if (gameMenu.open) return;
 
         if (theme.gridMode || theme.galleryMode) {
             const updated = updateGameIndex(currentGameIndex + 1);
@@ -250,6 +264,13 @@ Item {
     }
 
     function onCancelPressed() {
+        // the long-press menu closes first (this also serves a right-click)
+        if (gameMenu.open) {
+            gameMenu.close();
+            sounds.back();
+            return;
+        }
+
         if (theme.verticalMode) {
             focusSidebar();
             sounds.back();
@@ -263,6 +284,20 @@ Item {
 
     function onDetailsPressed() {
         currentView = 'gameDetails';
+        sounds.forward();
+    }
+
+    // The menu a long press on a game opens (see GameMenu.qml): Launch,
+    // Favorite and Details for that game. Called by the long-press handlers
+    // in GameItem, GameGrid and GameGallery, after they have selected the game
+    function openGameMenu() {
+        if (gameCount() === 0 || !currentGame) return;
+
+        // in Sidebar mode the sidebar may still have focus; a long press on a
+        // game is a request to work with that game
+        if (theme.verticalMode && sidebarFocused) sidebarFocused = false;
+
+        gameMenu.show();
         sounds.forward();
     }
 
@@ -300,6 +335,14 @@ Item {
     }
 
     Keys.onPressed: {
+        // the long-press menu takes accept and cancel while it is open, and
+        // swallows everything else so nothing moves behind it
+        if (gameMenu.open) {
+            event.accepted = true;
+            gameMenu.handleKey(event);
+            return;
+        }
+
         if (api.keys.isCancel(event) && !event.isAutoRepeat) {
             // in Vertical Mode, don't accept the event once the sidebar
             // already has focus - let it bubble up to Pegasus' own menu,
@@ -425,6 +468,11 @@ Item {
         // matches every Keys.onPressed handler in the theme: a held trigger
         // must not re-fire this screen's action once per repeat
         if (event.isAutoRepeat) {
+            return;
+        }
+
+        if (gameMenu.open) {
+            event.accepted = true;
             return;
         }
 
@@ -619,5 +667,16 @@ Item {
         shade: 'dark';
         color: theme.current.bgColor;
         showTitle: true;
+    }
+
+    // the long-press menu; declared last so it covers everything
+    GameMenu {
+        id: gameMenu;
+
+        onChosen: {
+            if (action === 'launch') onAcceptPressed();
+            if (action === 'favorite') onFavoritePressed();
+            if (action === 'details') onDetailsPressed();
+        }
     }
 }

@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 import QtGraphicalEffects 1.12
 
 // Grid layout for the Game List screen (Display Mode: Grid), showing box
@@ -168,11 +169,15 @@ Item {
         model: gameGridRoot.modeActive ? currentGameList : null;
         reuseItems: true;
         // swipe to scroll (tap-to-select still works via the delegate's
-        // MouseArea below); was previously false, which silently disabled
-        // touch scrolling in this Display Mode
+        // MouseArea below): a longer swipe scrolls further, like the grid in
+        // a photo gallery app. Not affected by the Swipe Paging setting
         interactive: true;
-        cellWidth: Math.floor(width / gameGridRoot.columns);
-        cellHeight: Math.floor(cellWidth * 1.32);
+        // never less than a pixel: while the screen is still being laid out
+        // the grid is briefly a negative width, and cells with no size make
+        // the grid build a delegate for every game before the layout settles
+        // (see GameScroll.qml's note on the same thing)
+        cellWidth: Math.max(1, Math.floor(width / gameGridRoot.columns));
+        cellHeight: Math.max(1, Math.floor(cellWidth * 1.32));
         cacheBuffer: cellHeight * 2;
 
         anchors {
@@ -284,8 +289,12 @@ Item {
                     // whatever the scraper produced. Bound to the grid's cell
                     // size, which only changes with Cards Size or the window,
                     // so this never re-triggers a load while scrolling
-                    sourceSize.width: Math.round(grid.cellWidth);
-                    sourceSize.height: Math.round(grid.cellHeight);
+                    // x devicePixelRatio: the final physical pixel size, so
+                    // art is only ever scaled down
+                    // 20px smaller each way: the card is drawn inside that
+                    // much margin (see art.maxWidth/maxHeight above)
+                    sourceSize.width: Math.round((grid.cellWidth - 20) * Screen.devicePixelRatio);
+                    sourceSize.height: Math.round((grid.cellHeight - 20) * Screen.devicePixelRatio);
 
                     // releases the size-animation suppression above once this
                     // delegate's new art has settled one way or the other
@@ -485,7 +494,12 @@ Item {
                     verticalAlignment: Image.AlignBottom;
                     asynchronous: true;
                     smooth: true;
+                    mipmap: true;
                     height: parent.height * .3;
+                    // logos were decoded at their full scraped size; bound to
+                    // the cell (not this card's animating size) so it never
+                    // reloads while scrolling
+                    sourceSize.height: Math.round(grid.cellHeight * .3 * Screen.devicePixelRatio);
 
                     layer.enabled: gameGridRoot.logoDropShadow;
                     layer.effect: DropShadow {
@@ -530,6 +544,8 @@ Item {
             }
 
             MouseArea {
+
+                cursorShape: Qt.PointingHandCursor;
                 anchors.fill: parent;
 
                 onClicked: {
@@ -541,13 +557,15 @@ Item {
                     }
                 }
 
+                // a long press selects the game if it isn't already, then opens
+                // the game menu (Launch / Favorite / Details)
                 onPressAndHold: {
-                    if (grid.currentIndex === index) {
-                        onDetailsPressed();
-                    } else {
+                    if (grid.currentIndex !== index) {
                         const updated = updateGameIndex(index);
                         if (updated) { sounds.nav(); }
                     }
+
+                    openGameMenu();
                 }
             }
         }

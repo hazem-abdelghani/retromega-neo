@@ -4,14 +4,23 @@ Most things are interactable in the header and footer. Try tapping on them!
 
 Button names below are the Xbox-style letters. With `Controller Layout` set to
 Switch, X and Y swap places (as they do on the pads themselves) and the footer
-prints the other letter - the action is the same either way.
+prints the other letter - the action is the same either way. With PlayStation,
+the buttons sit where the Xbox ones do: Cross is A, Circle is B, Square is X,
+Triangle is Y, and L1/R1/L2/R2 are LB/RB/LT/RT.
+
+On the game list (every display mode), press and hold a game to open a menu
+with Launch, Add to/Remove from Favorites and Details. Tap an entry to run it, or
+tap outside the menu to close it. A pad can use it too: up/down, A, and B to
+close.
+
+With a mouse: the wheel scrolls the game list (in Sidebar mode too, whichever side has focus), the Grid and the Settings list - the selection stays where it was, and the mouse selects by hovering. On the Collection Screen it steps through collections, one per notch, and in Gallery it moves one game per notch. Click a game to select it and click again to launch it; right-click goes back. In Settings the selection follows the mouse, and the arrows beside a choice step it back or forward.
 
 There are four layouts, switched via the "Display Mode" setting (List by default).
 
 ## Collection Screen *(Display Mode: List)*
 |controller|touch|action|
 |----------|-----|------|
-|`left/right`|`swipe left/right`|navigate forward/backward in the list|
+|`left/right`|`swipe left/right`|navigate forward/backward in the list (one collection per swipe; tap a page dot to jump to it)|
 |`L1/R1`||previous or next collection|
 |`A button`|`tap collection`|switch to games list|
 |`B button`||pegasus settings menu|
@@ -26,7 +35,7 @@ There are four layouts, switched via the "Display Mode" setting (List by default
 |controller|touch|action|
 |----------|-----|------|
 |`up/down`|`tap`|select a game, tap twice to launch|
-||`swipe up/down`|scroll list|
+||`swipe up/down`|previous or next game (scrolls the list with *Swipe Paging* off)|
 |`left/right`||previous or next collection|
 |`A button`|`tap`|launch game|
 |`B button`|`tap footer icon`|back to collection list|
@@ -34,7 +43,8 @@ There are four layouts, switched via the "Display Mode" setting (List by default
 |`Y button`|`tap footer icon`|cycle thumbnail art|
 |`R1/L1`||skip to previous or next letter|
 |`R2`|`tap footer icon`|open search|
-|`L2`|`long press game` `tap footer icon`|game details screen|
+|`L2`|`tap footer icon`|game details screen|
+||`long press game`|open the game menu: launch, favorite or details|
 
 ---
 
@@ -50,7 +60,8 @@ The Collection Screen stays the classic carousel; only the Game List changes, sh
 |`X button`|`tap footer icon`|mark game as favorite|
 |`R1/L1`||skip to previous or next letter|
 |`R2`|`tap footer icon`|open search|
-|`L2`|`long press game` `tap footer icon`|game details screen|
+|`L2`|`tap footer icon`|game details screen|
+||`long press game`|open the game menu: launch, favorite or details|
 
 ---
 
@@ -66,7 +77,8 @@ The Collection Screen stays the classic carousel; only the Game List changes, sh
 |`X button`|`tap footer icon`|mark game as favorite|
 |`R1/L1`||skip to previous or next letter|
 |`R2`|`tap footer icon`|open search|
-|`L2`|`long press game` `tap footer icon`|game details screen|
+|`L2`|`tap footer icon`|game details screen|
+||`long press game`|open the game menu: launch, favorite or details|
 
 ---
 
@@ -77,7 +89,7 @@ The Collection Screen is replaced by a sidebar on the left inside the Game List.
 |----------|-----|------|
 |`up/down` *(sidebar focused)*|`tap`|highlight a console (Arcade, Game Boy, etc); preview updates live|
 |`up/down` *(games focused)*|`tap`|select a game, tap twice to launch|
-||`swipe up/down`|scroll list|
+||`swipe up/down`|previous or next game (scrolls the list with *Swipe Paging* off)|
 |`left`|`swipe right`|return focus to the sidebar (from the games column)|
 |`right`|`tap collection`|move focus into the games column (from the sidebar)|
 |`A button`|`tap`|move into games column (sidebar) / launch game (games column)|
@@ -86,7 +98,8 @@ The Collection Screen is replaced by a sidebar on the left inside the Game List.
 |`Y button`|`tap header icon`|retromega settings menu (sidebar) / cycle thumbnail art, tap footer icon (games column)|
 |`R1/L1`||previous/next console (sidebar) / skip to previous or next letter (games column)|
 |`R2`|`tap footer icon`|open search|
-|`L2`|`tap footer icon`|attract mode (sidebar) / game details screen, long press game (games column)|
+|`L2`|`tap footer icon`|attract mode (sidebar) / game details screen (games column)|
+||`long press game`|open the game menu: launch, favorite or details (games column)|
 
 ---
 
@@ -108,7 +121,7 @@ A single scrolling list. Every setting is grouped under a section heading, and t
 |controller|touch|action|
 |----------|-----|------|
 |`up/down`|`tap`|highlight a setting or platform (section headings are skipped)|
-||`swipe up/down`|scroll list|
+||`swipe up/down`|previous or next setting (scrolls the list with *Swipe Paging* off)|
 |`A button`|`tap`|toggle setting, cycle to the next option for multi-choice settings like Font Size, or open the Platforms panel|
 |`left/right`||step a multi-choice setting (Display Mode, Cards Size, Font Size, Theme, Controller Layout, Cycle Art Types) to the previous/next option|
 |`right`|`tap`|open the Platforms panel (from the Platforms row)|

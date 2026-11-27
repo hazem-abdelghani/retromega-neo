@@ -70,7 +70,8 @@ Item {
 
         SidebarItem {
             width: sidebarListView.width;
-            height: itemHeight;
+            // see GameScroll.qml: never a zero or negative height
+            height: Math.max(1, itemHeight);
         }
     }
 }

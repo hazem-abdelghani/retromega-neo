@@ -46,6 +46,12 @@ Item {
     MouseArea {
         anchors.fill: parent;
         enabled: settingKey !== '';
+        cursorShape: Qt.PointingHandCursor;
+        // the selection follows the mouse. Only real mouse movement counts,
+        // not the list scrolling underneath a pointer that is standing still,
+        // so a wheel or the keys can't fight it
+        hoverEnabled: true;
+        onPositionChanged: settingsListView.hoverSelect(index);
         onClicked: {
             let muteSound = false;
 
@@ -99,7 +105,9 @@ Item {
     Item {
         id: valueColumn;
 
-        width: parent.height * 3.2;
+        // wide enough for the longest choice ("Aquamarine", "PlayStation") between
+        // the two arrows, which each take .6 of a row's height
+        width: parent.height * 4.4;
         height: parent.height;
         opacity: rowEnabled ? 1.0 : 0.35;
 
@@ -146,15 +154,63 @@ Item {
                 return labels[currentValue];
             }
             elide: Text.ElideRight;
+            // if a choice is still too long for the room (a narrow window),
+            // shrink it to fit rather than cut it off with an ellipsis
+            fontSizeMode: Text.HorizontalFit;
+            minimumPixelSize: 8;
             verticalAlignment: Text.AlignVCenter;
-            horizontalAlignment: Text.AlignRight;
+            horizontalAlignment: Text.AlignHCenter;
             color: theme.current.accentColor;
-            anchors.fill: parent;
+            // between the two arrows below
+            anchors {
+                fill: parent;
+                leftMargin: parent.height * .6;
+                rightMargin: parent.height * .6;
+            }
 
             font {
                 pixelSize: parent.height * .34;
                 letterSpacing: -0.3;
                 bold: true;
+            }
+        }
+    }
+
+    // Arrows either side of a select row's value, to step it back or forward
+    // with the mouse. Right-click is Back on every screen, and a click on the
+    // row only goes forward, so without these there is no way to go back one
+    // option by mouse. (Left/Right on the keys do the same thing.)
+    Repeater {
+        model: isSelect ? [-1, 1] : [];
+
+        Text {
+            text: modelData < 0 ? '\u2039' : '\u203a';
+            color: theme.current.accentColor;
+            opacity: (rowEnabled ? 1 : .35) * (settingsListView.currentIndex === index ? 1 : .55);
+            verticalAlignment: Text.AlignVCenter;
+            horizontalAlignment: modelData < 0 ? Text.AlignLeft : Text.AlignRight;
+            width: valueColumn.height * .6;
+            height: valueColumn.height;
+            x: modelData < 0 ? valueColumn.x : valueColumn.x + valueColumn.width - width;
+
+            font {
+                pixelSize: valueColumn.height * .6;
+                bold: true;
+            }
+
+            MouseArea {
+                anchors.fill: parent;
+                // a generous target, reaching past the arrow itself
+                anchors.margins: -valueColumn.height * .1;
+                cursorShape: Qt.PointingHandCursor;
+
+                onClicked: {
+                    settingsListView.hoverSelect(index);
+                    if (!rowEnabled) return;
+
+                    settings.cycle(settingKey, modelData);
+                    sounds.nav();
+                }
             }
         }
     }

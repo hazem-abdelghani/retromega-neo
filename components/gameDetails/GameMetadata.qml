@@ -1,5 +1,4 @@
 import QtQuick 2.15
-import QtGraphicalEffects 1.12
 
 Item {
     property double pixelSize;
@@ -7,7 +6,7 @@ Item {
     property double actionButtonHeight: {
         return Math.min(
             actionButtons.height * .85,
-            root.height * 0.1
+            safeArea.height * 0.1
         );
     }
 

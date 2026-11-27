@@ -21,8 +21,8 @@ Item {
     }
 
     FastBlur {
-        width: root.width;
-        height: root.height;
+        width: safeArea.width;
+        height: safeArea.height;
         radius: 80;
         opacity: .4;
         source: blurSource;
@@ -38,7 +38,7 @@ Item {
 
         anchors {
             top: parent.top;
-            topMargin: root.height * .06;
+            topMargin: safeArea.height * .06;
             horizontalCenter: parent.horizontalCenter;
         }
 
@@ -46,7 +46,7 @@ Item {
             id: modalTitle;
 
             text: 'Search';
-            height: root.height * .115;
+            height: safeArea.height * .115;
             verticalAlignment: Text.AlignVCenter;
             color: theme.current.defaultHeaderNameColor
 

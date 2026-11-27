@@ -1,16 +1,13 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 import QtGraphicalEffects 1.12
 import SortFilterProxyModel 0.2
 
 Item {
     // tracked as a real QML property (rather than re-reading settings.get()
-    // inline in the image "source" binding) so toggling the setting updates
-    // the art immediately - see theme.qml's note on why a direct binding
-    // to settings.get() never reacts to later changes
-    property bool compactDeviceArt: settings.get('compactDeviceArt');
-
-    // same pattern as compactDeviceArt above: tracked as a real QML property
-    // so toggling the setting updates the collection list immediately
+    // inline in a binding) so toggling the setting updates the collection
+    // list immediately - see theme.qml's note on why a direct binding to
+    // settings.get() never reacts to later changes
     property bool collectionLogos: settings.get('collectionLogos');
 
     // matches GameItem.qml's logoDropShadow: reuses the shared dropShadow
@@ -35,10 +32,6 @@ Item {
         device.loadFailed = false;
     }
 
-    function compactDeviceArtCallback(value) {
-        compactDeviceArt = value;
-    }
-
     function collectionLogosCallback(value) {
         collectionLogos = value;
     }
@@ -48,18 +41,18 @@ Item {
     }
 
     Component.onCompleted: {
-        settings.addCallback('compactDeviceArt', compactDeviceArtCallback);
         settings.addCallback('collectionLogos', collectionLogosCallback);
         settings.addCallback('dropShadow', logoDropShadowCallback);
     }
 
     Component.onDestruction: {
-        settings.removeCallback('compactDeviceArt', compactDeviceArtCallback);
         settings.removeCallback('collectionLogos', collectionLogosCallback);
         settings.removeCallback('dropShadow', logoDropShadowCallback);
     }
 
     MouseArea {
+
+        cursorShape: Qt.PointingHandCursor;
         anchors.fill: parent;
         onClicked: {
             collectionListView.currentIndex = index;
@@ -72,6 +65,11 @@ Item {
         source: '../../assets/images/stripe.png';
         fillMode: Image.PreserveAspectFit;
         horizontalAlignment: Image.AlignRight;
+        asynchronous: true;
+        smooth: true;
+        // the stripe is 544x1920 and drawn about screen-high; decode it at the
+        // final physical pixel height so it is only ever scaled down
+        sourceSize.height: Math.round(height * Screen.devicePixelRatio);
 
         anchors {
             fill: parent;
@@ -96,12 +94,12 @@ Item {
         visible: !showLogo;
         text: modelData.name;
         color: theme.current.titleColor;
-        width: root.width * .46;
+        width: safeArea.width * .46;
         wrapMode: Text.WordWrap;
         lineHeight: 0.8;
 
         font {
-            pixelSize: root.height * .075;
+            pixelSize: safeArea.height * .075;
             bold: true;
         }
 
@@ -118,17 +116,19 @@ Item {
 
         visible: showLogo;
         source: showLogo ? '../../assets/images/collections/' + collectionData.getCollectionImage(modelData.shortName) + '.png' : '';
-        width: root.width * .23;
-        height: root.height * .15;
+        width: safeArea.width * .23;
+        height: safeArea.height * .15;
         fillMode: Image.PreserveAspectFit;
         horizontalAlignment: Image.AlignLeft;
         verticalAlignment: Image.AlignVCenter;
         asynchronous: true;
         smooth: true;
-        // collection logos are up to 1920px wide and drawn one row tall.
+        mipmap: true;
+        // collection logos are up to 1440px wide and drawn one row tall.
         // Height only, so PreserveAspectFit works out the width - binding
-        // the width as well would reload every time the slot resized
-        sourceSize.height: Math.round(root.height * .15);
+        // the width as well would reload every time the slot resized.
+        // x devicePixelRatio: decode at the final physical pixel height
+        sourceSize.height: Math.round(safeArea.height * .15 * Screen.devicePixelRatio);
 
         layer.enabled: logoDropShadow;
         layer.effect: DropShadow {
@@ -169,13 +169,13 @@ Item {
             left: parent.left;
             leftMargin: 30;
             top: showLogo ? undefined : title.bottom;
-            topMargin: showLogo ? undefined : root.height * .02;
+            topMargin: showLogo ? undefined : safeArea.height * .02;
             bottom: showLogo ? parent.bottom : undefined;
-            bottomMargin: showLogo ? root.height * .05 : undefined;
+            bottomMargin: showLogo ? safeArea.height * .05 : undefined;
         }
 
         font {
-            pixelSize: root.height * .03;
+            pixelSize: safeArea.height * .03;
             letterSpacing: -0.3;
             bold: true;
         }
@@ -203,7 +203,7 @@ Item {
 
         font {
             capitalization: Font.AllUppercase;
-            pixelSize: root.height * .025;
+            pixelSize: safeArea.height * .025;
             letterSpacing: 1.3;
             bold: true;
         }
@@ -231,9 +231,7 @@ Item {
         property bool loadFailed: false;
 
         source: {
-            const dir = compactDeviceArt
-                ? '../../assets/images/devicesCompact/'
-                : '../../assets/images/devices/';
+            const dir = '../../assets/images/devices/';
 
             if (loadFailed) return dir + 'default.png';
 
@@ -246,34 +244,26 @@ Item {
             }
         }
 
-        width: root.width * .50;
-        height: root.height * .65;
+        width: safeArea.width * .50;
+        height: safeArea.height * .65;
         fillMode: Image.PreserveAspectFit;
         horizontalAlignment: Image.AlignHCenter;
         asynchronous: true;
         smooth: true;
+        mipmap: true;
         // see GameScroll's highlightedDeviceImage - full-size device art is
         // far larger than the slot it's drawn in, and the carousel holds
-        // several of these at once
-        sourceSize.width: Math.round(root.width * .50);
-        sourceSize.height: Math.round(root.height * .65);
+        // several of these at once. Decoded at the final physical pixel size
+        // (x devicePixelRatio) so it is only ever scaled down, never up
+        sourceSize.width: Math.round(safeArea.width * .50 * Screen.devicePixelRatio);
+        sourceSize.height: Math.round(safeArea.height * .65 * Screen.devicePixelRatio);
         visible: true;
 
         anchors {
             verticalCenter: parent.verticalCenter;
             verticalCenterOffset: 10;
             right: parent.right;
-            rightMargin: root.width * .02;
+            rightMargin: safeArea.width * .02;
         }
     }
-
-    // DropShadow {
-    //     source: device;
-    //     verticalOffset: 10;
-    //     color: '#30000000';
-    //     radius: 20;
-    //     samples: 41;
-    //     cached: true;
-    //     anchors.fill: device;
-    // }
 }

@@ -1,5 +1,4 @@
 import QtQuick 2.15
-import QtGraphicalEffects 1.12
 
 import '../footer' as Footer
 
@@ -59,7 +58,7 @@ Item {
 
     function hideFullDescription() {
         fullDescriptionShowing = false;
-        fullDescription.anchors.topMargin = root.height;
+        fullDescription.anchors.topMargin = safeArea.height;
         fullDescription.resetFlickable();
         sounds.back();
     }
@@ -237,7 +236,7 @@ Item {
 
         anchors {
             top: parent.top;
-            topMargin: root.height;
+            topMargin: safeArea.height;
             left: parent.left;
             right: parent.right;
         }

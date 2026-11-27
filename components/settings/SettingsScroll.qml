@@ -1,5 +1,7 @@
 import QtQuick 2.15
 
+import '../swipe' as Swipe
+
 Item {
     property alias settingsListView: settingsListView;
     // kept for SettingsItem/PlatformItem's highlight checks; there's no
@@ -58,10 +60,25 @@ Item {
         return result;
     }
 
+    // whether there is a real (non-header) row in that direction
+    function canMove(step) {
+        let candidate = settingsListView.currentIndex;
+
+        do {
+            candidate += step;
+            if (candidate < 0 || candidate > rowModel.length - 1) return false;
+        } while (rowModel[candidate].isHeader);
+
+        return true;
+    }
+
     // moves currentIndex by the given step (+1/-1), skipping over any
     // header rows so keyboard/gamepad navigation always lands on a real
     // setting or platform rather than a section title
     function moveCurrentIndex(step) {
+        // keys and the wheel scroll the list to the selection again
+        settingsListView.hoverSelecting = false;
+
         let candidate = settingsListView.currentIndex;
 
         do {
@@ -158,6 +175,11 @@ Item {
         width: parent.width - 40; // minus the margins
         height: parent.height - 24;
         clip: true;
+        // with Swipe Paging on, the pager at the bottom of this file takes
+        // over: a swipe selects the next or previous setting, and the list
+        // bounces at either end
+        interactive: !settingsPager.paging;
+        transform: Translate { y: settingsPager.offset; }
         highlightMoveDuration: 0;
         preferredHighlightBegin: itemHeight - 12; // height of an item minus top margin
         preferredHighlightEnd: height - (itemHeight + 12); // height of an item plus bottom margin
@@ -165,7 +187,33 @@ Item {
         // view's own viewport, which is 24px shorter than the parent Item
         // (12px top + 12px bottom margin), so the parent's height pushed the
         // range 24px past the bottom edge
-        highlightRangeMode: ListView.ApplyRange;
+        // Not applied while the mouse is choosing a row (hoverSelecting
+        // below): the range exists to scroll the selected row into view, and
+        // a row under the pointer is already where the user is looking, so
+        // the list must not move beneath them. Keys and the wheel switch it
+        // back on, and the list then scrolls to the selection as usual.
+        highlightRangeMode: hoverSelecting ? ListView.NoHighlightRange : ListView.ApplyRange;
+
+        property bool hoverSelecting: false;
+        // when the wheel last scrolled the list. The rows move under a mouse
+        // that is standing still, which Qt reports as hovering, so hover
+        // selection is held off for a moment afterwards - the wheel scrolls
+        // the page and leaves the highlight where it is
+        property double wheelTime: 0;
+
+        // Selects the row under the mouse WITHOUT scrolling the list. Even
+        // with no highlight range a view brings a newly selected row fully
+        // into view, which made rows at the edge jump up or down as the
+        // pointer touched them, so the scroll position is put back.
+        function hoverSelect(row) {
+            if (currentIndex === row) return;
+            if (Date.now() - wheelTime < 400) return;
+
+            const y = contentY;
+            hoverSelecting = true;
+            currentIndex = row;
+            contentY = y;
+        }
 
         anchors {
             left: parent.left;
@@ -207,7 +255,8 @@ Item {
 
         Item {
             width: settingsListView.width;
-            height: modelData.isHeader ? headerHeight : itemHeight;
+            // see GameScroll.qml: never a zero or negative height
+            height: Math.max(1, modelData.isHeader ? headerHeight : itemHeight);
 
             // Every row used to build all three of these and hide two, so a
             // 30-row list carried 90 row items - and each hidden SettingsItem
@@ -257,5 +306,32 @@ Item {
                 }
             }
         }
+    }
+
+    // one setting per swipe: dragging up selects the next row, down the
+    // previous one (section headers are skipped). Off while the Platforms
+    // panel is open, which has its own list
+    Swipe.SwipePager {
+        id: settingsPager;
+
+        horizontal: false;
+        follow: false;
+        viewActive: !settingsRoot.platformsOpen;
+        canGo: function(step) { return canMove(step); }
+        onStepRequested: {
+            const prevIndex = settingsListView.currentIndex;
+            moveCurrentIndex(step);
+            if (settingsListView.currentIndex !== prevIndex) sounds.nav();
+        }
+    }
+
+    // the mouse wheel scrolls the list and leaves the selection alone (the
+    // mouse selects by hovering, the keys by moving). A non-interactive list
+    // would otherwise ignore the wheel altogether
+    Swipe.WheelScroller {
+        view: settingsListView;
+        active: settingsPager.enabledPaging;
+        pixelsPerNotch: itemHeight * 1.5;
+        onScrolled: settingsListView.wheelTime = Date.now();
     }
 }

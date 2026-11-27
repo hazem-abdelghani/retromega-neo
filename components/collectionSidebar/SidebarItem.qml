@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 
 Item {
     property bool isCurrent: sidebarListView.currentIndex === index;
@@ -11,6 +12,8 @@ Item {
     }
 
     MouseArea {
+
+        cursorShape: Qt.PointingHandCursor;
         anchors.fill: parent;
         onClicked: {
             if (!sidebarFocused) {
@@ -49,9 +52,10 @@ Item {
         asynchronous: true;
         smooth: true;
         mipmap: true;
-        // icons are 256px square and drawn at roughly a fifth of that
-        sourceSize.width: Math.round(parent.height * .62);
-        sourceSize.height: Math.round(parent.height * .62);
+        // icons are 256px square and drawn at roughly a fifth of that;
+        // x devicePixelRatio keeps them sharp on high-DPI screens
+        sourceSize.width: Math.round(parent.height * .62 * Screen.devicePixelRatio);
+        sourceSize.height: Math.round(parent.height * .62 * Screen.devicePixelRatio);
         opacity: 1;
         width: parent.height * .62;
         height: parent.height * .62;

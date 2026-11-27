@@ -26,8 +26,8 @@ Item {
 
         color: theme.current.bgColor;
         radius: 8;
-        width: root.height * .4;
-        height: root.height * .4;
+        width: safeArea.height * .4;
+        height: safeArea.height * .4;
         border.color: theme.current.blurTextColor;
         opacity: 0;
 
@@ -38,7 +38,7 @@ Item {
             color: theme.current.detailsColor;
 
             font {
-                pixelSize: root.height * .2;
+                pixelSize: safeArea.height * .2;
                 bold: true;
             }
 

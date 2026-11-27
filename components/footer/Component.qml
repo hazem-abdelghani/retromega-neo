@@ -9,7 +9,9 @@ Rectangle {
 
     signal footerButtonClicked(string sigValue);
 
-    height: root.height * .115 * theme.fontScale;
+    // Larger Tap Targets makes the footer a quarter taller, which scales the
+    // buttons in it with it, and widens each button's hit area below
+    height: safeArea.height * .115 * theme.fontScale * (theme.largeTargets ? 1.25 : 1);
     color: theme.current.bgColor;
 
     anchors {
@@ -53,7 +55,11 @@ Rectangle {
                 visible: modelData.visible ?? true;
 
                 MouseArea {
+
+                    cursorShape: Qt.PointingHandCursor;
                     anchors.fill: parent;
+                    // reaches past the button, into the gap around it
+                    anchors.margins: theme.largeTargets ? -footer.height * .12 : 0;
                     onClicked: {
                         footerButtonClicked(modelData.sigValue);
                     }

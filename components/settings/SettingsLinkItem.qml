@@ -11,6 +11,10 @@ Item {
 
     MouseArea {
         anchors.fill: parent;
+        cursorShape: Qt.PointingHandCursor;
+        // the selection follows the mouse - see SettingsItem.qml
+        hoverEnabled: true;
+        onPositionChanged: settingsListView.hoverSelect(index);
 
         onClicked: {
             let muteSound = false;

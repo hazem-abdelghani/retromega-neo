@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 import QtGraphicalEffects 1.12
 
 Rectangle {
@@ -46,13 +47,15 @@ Rectangle {
     }
 
     property double titleWidth: {
-        return root.width - headerWidgets.width
+        return safeArea.width - headerWidgets.width
             - (2 * headerWidgets.anchors.rightMargin)
             - headerTitle.anchors.leftMargin;
     }
 
     color: 'transparent';
-    height: root.height * .115 * theme.fontScale;
+    // Larger Tap Targets makes the header a quarter taller, which scales the
+    // clock and icons in it with it, and widens their hit areas
+    height: safeArea.height * .115 * theme.fontScale * (theme.largeTargets ? 1.25 : 1);
 
     anchors {
         left: parent.left;
@@ -115,10 +118,11 @@ Rectangle {
         opacity: theme.current.bgOpacity;
         asynchronous: true;
         smooth: true;
-        // decoded at the height it's drawn at rather than the source's full
-        // 1920px - see CollectionItem's collectionLogo. Deliberately not
-        // bound to titleWidth, which moves as the title changes
-        sourceSize.height: Math.round(parent.height * .55);
+        mipmap: true;
+        // decoded at the height it's drawn at (x devicePixelRatio) rather than
+        // the source's full size - see CollectionItem's collectionLogo.
+        // Deliberately not bound to titleWidth, which moves as the title changes
+        sourceSize.height: Math.round(parent.height * .55 * Screen.devicePixelRatio);
 
         layer.enabled: logoDropShadow;
         layer.effect: DropShadow {
@@ -190,7 +194,11 @@ Rectangle {
             }
 
             MouseArea {
+
+                cursorShape: Qt.PointingHandCursor;
                 anchors.fill: parent;
+                // reaches past the icon: it is only a third of the header tall
+                anchors.margins: theme.largeTargets ? -parent.parent.height * .2 : 0;
                 onClicked: {
                     if (currentView === 'settings') {
                         // same exit path as the B button, so tapping the icon

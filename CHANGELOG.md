@@ -1,6 +1,54 @@
 # Changes
 
 
+## Neo - Nov 27th
+Changes since the Sep 1st release.
+
+### Major changes
+
+- **Swipe Paging** - new `Swipe Paging` setting (on by default) that makes touch and mouse swipes page one step at a time, like paging through photos, instead of coasting past several. Turning it off restores normal flick scrolling. Grid and Gallery are not affected: they keep free scrolling, where a longer swipe scrolls further
+    - **Collection Screen** - the carousel follows your finger by at most one collection, and a short swipe moves to the next or previous one
+    - **Game List** (List and Sidebar) - a swipe up or down selects the next or previous game
+    - **Settings screen** - a swipe up or down selects the next or previous setting (section headings are skipped)
+    - swiping past the first or last item now gives a short bounce instead of nothing (Collection Screen, Game List and Settings)
+    - the Collection Screen's page dots are now tappable, to jump straight to a collection
+    - all of it is handled by one new component, `components/swipe/SwipePager.qml`
+- **Touch**
+    - **Long-press menu** - pressing and holding a game now opens a menu with Launch, Favorite and Details (a pad can use it too). Before, a long press went straight to Details
+    - **Larger Tap Targets** - new `Larger Tap Targets` setting (off by default): the footer buttons and the header clock and settings icon get bigger, with wider hit areas
+- **Looks and layout**
+    - **Accent Color** - new `Accent Color` setting: Default, Blue, Green, Orange, Red, Purple, Pink or Yellow, applied to every accent in the theme (the light theme uses deeper tones)
+    - **Overscan Margin** - new `Overscan Margin` setting: Off, 2%, 4%, 6% or 8% of the screen left empty on every side, for TVs that crop the picture. Everything now sits inside a `safeArea` item in `theme.qml`, and components size themselves from it instead of from the root
+    - **PlayStation controller layout** - `Controller Layout` gains PlayStation, which prints the colored Cross, Circle, Square and Triangle (drawn in QML, so they don't depend on a font) and L1/R1/L2/R2. It shares the Xbox layout's button positions
+- **More themes** - `Theme` now has ten choices: Light and Dark, plus eight new ones - **Black** (a pure `#000000` background for OLED screens), **Sapphire** (blue), **Ruby** (red), **Emerald** (green), **Amethyst** (purple), **Amber** (yellow), **Aquamarine** (cyan) and **Diamond** (silver). The six colored ones are the Dark theme tinted from a single hue (`components/themes/GemTheme.qml`); Diamond is the Light theme in cool silver. Themes now say whether they are dark (`isDark`) and what text reads on their background (`readableTextColor`), instead of screens guessing. Emerald and Aquamarine use a softer accent than the others (`#47c680` and `#40c9c0`), because fully saturated green and cyan glowed on the dark panels
+- **Mouse and keyboard friendliness**
+    - the mouse wheel works on the lists that Swipe Paging makes non-interactive (they ignore it on their own): it scrolls the game list and the Settings list and leaves the selection alone, like a wheel anywhere else, and steps one collection per notch on the Collection Screen. Touchpad scrolling is supported too (`components/swipe/WheelScroller.qml`, `WheelStepper.qml`). It scrolls the game list in Sidebar mode even while the console sidebar has focus (it was dead there), and in Gallery - which scrolls sideways and ignores a plain wheel - it moves one game per notch
+    - Settings: the wheel scrolling the list never moves the highlight, even though the rows slide under a mouse that is standing still (hover selection waits a moment after the wheel)
+    - Settings: the selection follows the mouse without scrolling the list (a row at the edge of the screen is selected where it is, instead of jumping into view; the keys scroll to the selection as before), and a choice row has arrows (‹ ›) either side of its value, to step it back or forward by mouse - right-click is Back everywhere, so a click could only ever go forward
+    - the pointer turns into a hand over buttons, rows, cards and the page dots
+    - the long-press menu is readable on the Light and Diamond themes (it used the white text meant for selected rows)
+- **Startup with a large library** - the game list, Grid, Gallery, console sidebar, Settings list and Platforms panel could build a row for every game while the screen was still being laid out, and the Game List was a negative height at that moment, which left every row with no height too. A list whose rows have no height never runs out of room, so it created a delegate for every game before the layout settled. In a test with stand-in data (the original theme behaves the same way) 1,250 games took 1.7 seconds to load, 2,500 took 10 and 5,000 took 49, and 25,000 did not finish in ten minutes. Rows and cells now have a minimum size of one pixel, so only the rows that fit are built: 25,000 games load in under a second in every display mode. Real Pegasus timings will differ, but the shape of the problem is the same
+- **Sharper artwork, one device set** - the `Compact Device Art` setting and the `assets/images/devicesCompact/` set are gone. Instead the single `devices` set is shown sharply at any size
+    - every image the theme loads at a size it controls - device art, collection logos, game box art, game and collection logos in every Display Mode, the screenshot preview, the sidebar icons and the background stripe - is decoded at its final on-screen pixel size (scaled by the screen's device pixel ratio), so it is only ever scaled down. The ones the scene scales down further (logos, thumbnails, the preview) also use mipmapping
+    - `assets/images/devices/` and `assets/images/collections/` were pre-shrunk once from the originals with Lanczos-3 (premultiplied alpha, colour clamped to alpha so edges don't ring) and then run through `oxipng`. Logos fit within 1440x540
+    - device art fits within 1920x1400, about 2x the largest size it is drawn at, so it is only ever scaled down
+    - `assets/images/stripe.png` was a 136x480 image drawn about screen-high, so it was always scaled up. It is redrawn at 544x1920 (4x) from its measured shape, scaled down from a larger master with Lanczos-3 and run through `oxipng` (8 KB, down from 21 KB)
+    - the unused `devices/mastersystem_old.png` was removed
+    - images that are already small enough are untouched. To redo any of this, start from the full-size originals, never from the shrunk files
+
+### Minor changes
+
+- Gallery swipes: a short or slow swipe now carries less far and a long or fast one carries further (measured with simulated swipes: a slow 400px swipe went 2 cards instead of 4, a fast 700px swipe 9 instead of 7, a hard fling 22 instead of 8), so how far you swipe matches how far it scrolls
+- memory: the Grid decodes its box art at the card's drawn size (the cell minus its margin) rather than the whole cell
+- startup: the collection screen's device art decodes about 1.6x faster (about 27ms per pad instead of 44ms, measured over all 38) because the files are now Lanczos-shrunk to 1920x1400 instead of up to 2570x2208
+- version bumped to 1.1.0
+- Settings: the value column is wider and shrinks a choice to fit instead of cutting it off, so long choices such as "Aquamarine" and "PlayStation" show in full, also in a narrow window
+- tidy-up: removed four unused `QtGraphicalEffects` imports, a commented-out shadow block and some debug scaffolding comments, and made three loose `==` comparisons strict; [CONTROLS.md](CONTROLS.md) now says a long press opens the game menu (it still said it opened the details screen)
+- cleanup pass: every bundled device, icon and collection image is reachable from `CollectionData.qml`, every setting is read somewhere and no QML file is unused, so nothing else needed to go
+- [SETTINGS.md](SETTINGS.md) now starts with a table of every setting at a glance, in the order they appear on the Settings screen, with its choices, default and what it does (all 30 settings), and how to use the screen with a gamepad, touch or a mouse, followed by the full explanation of each one
+- docs updated: [SETTINGS.md](SETTINGS.md) (`Swipe Paging`, `Compact Device Art` removed), [CONTROLS.md](CONTROLS.md) (swipes), [DEVICES.md](DEVICES.md) (three artwork sets) and the README
+
+
 ## Neo - Sep 1st
 First release of **Retro Mega Neo**, a fork of plaidman's Retro Mega Next. Everything below is new relative to `retromega-next` main (Dec 2023).
 
@@ -213,7 +261,7 @@ First release of **Retro Mega Neo**, a fork of plaidman's Retro Mega Next. Every
     - new scaling code to make icons look better in all resolutions
     - fonts, images, and spacing scale to screen resolution
 - improve boxart rendering code
-    - more natural generated DropShadow layer instad of an image file
+    - more natural generated DropShadow layer instead of an image file
     - more straightforward scaling logic
     - images that fail to load will fail more gracefully
     - very tall images will no longer affect other elements on the page

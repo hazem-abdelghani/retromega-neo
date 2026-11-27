@@ -5,6 +5,14 @@ Item {
     property string titleColor: '#cccccc';
     property double bgOpacity: 0.7;
 
+    // true for the themes with a dark background (everything but Light and
+    // Diamond); used where text colour has to follow the background
+    property bool isDark: true;
+    // text that reads on this theme's own background colour. focusTextColor is
+    // for rows with the (dark) highlight colour behind them and is white in
+    // the light themes, so it can't be used on a plain background there
+    property string readableTextColor: '#cccccc';
+
     // shared
     property string bgColor: '#111111';
     property string dividerColor: '#20ffffff';
@@ -17,7 +25,10 @@ Item {
 
     // settings
     property string highlightColor: '#333333';
-    property string accentColor: '#5b9bf0';
+    // the theme's own accent, restored when the Accent Color setting is
+    // "Default" (see Handler.qml)
+    property string defaultAccent: '#5b9bf0';
+    property string accentColor: defaultAccent;
 
     // name filter modal
     property string textInputBackgroundColor: '#222222';

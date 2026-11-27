@@ -1,6 +1,8 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 
 import '../media' as Media
+import '../swipe' as Swipe
 
 Item {
     id: gameScrollRoot;
@@ -48,13 +50,6 @@ Item {
     ];
 
     property string currentImageType: '';
-
-    // tracked as a real QML property (rather than re-reading settings.get()
-    // inline in the highlighted device image's "source" binding) so
-    // toggling the setting updates the art immediately - see theme.qml's
-    // note on why a direct binding to settings.get() never reacts to
-    // later changes
-    property bool compactDeviceArt: settings.get('compactDeviceArt');
 
     property string imgSrc: {
         // assets as well as currentGame: the fallback path below indexes into
@@ -111,10 +106,9 @@ Item {
         'screens': ['screenshot', 'titlescreen', 'background'],
     };
 
-    // tracked as a real QML property with a callback, for the same reason
-    // compactDeviceArt above is - settings.get() reads a plain JS object
-    // that never notifies QML, so a direct binding would only ever evaluate
-    // once
+    // tracked as a real QML property with a callback, because
+    // settings.get() reads a plain JS object that never notifies QML, so a
+    // direct binding would only ever evaluate once
     property string cycleArt: settings.get('cycleArt');
 
     // The chosen group, always with the type this game would show by default
@@ -196,7 +190,7 @@ Item {
     }
 
     property string noGameText: {
-        if (nameFilter != '') {
+        if (nameFilter !== '') {
             return 'No Games With "' + nameFilter + '"';
         }
 
@@ -218,8 +212,6 @@ Item {
         }
     }
 
-    function compactDeviceArtCallback(value) { compactDeviceArt = value; }
-
     Component.onCompleted: {
         gamesListView.currentIndex = currentGameIndex;
         if (currentGameIndex >= 0) {
@@ -230,7 +222,6 @@ Item {
         settings.addCallback('gameListVideo', gameListVideoCallback);
         settings.addCallback('preferBox', preferBoxCallback);
         settings.addCallback('cycleArt', cycleArtCallback);
-        settings.addCallback('compactDeviceArt', compactDeviceArtCallback);
     }
 
     Component.onDestruction: {
@@ -243,7 +234,6 @@ Item {
         settings.removeCallback('gameListVideo', gameListVideoCallback);
         settings.removeCallback('preferBox', preferBoxCallback);
         settings.removeCallback('cycleArt', cycleArtCallback);
-        settings.removeCallback('compactDeviceArt', compactDeviceArtCallback);
     }
 
     Text {
@@ -280,6 +270,11 @@ Item {
         // (12px top + 12px bottom margin), so the parent's height pushed the
         // range 24px past the bottom edge
         highlightRangeMode: ListView.ApplyRange;
+        // with Swipe Paging on, the pager at the bottom of this file takes
+        // over: a swipe moves the selection one game, not a free-running flick
+        interactive: !gamesPager.paging;
+        // the bounce when a swipe runs past the first or last game
+        transform: Translate { y: gamesPager.offset; }
 
         anchors {
             left: parent.left;
@@ -309,7 +304,13 @@ Item {
 
         GameItem {
             width: gamesListView.width;
-            height: itemHeight;
+            // never less than a pixel: while the screen is still being laid
+            // out the list is briefly a negative height, which made every row
+            // zero or negative height too - and a list whose rows have no
+            // height never runs out of room, so it built a delegate for EVERY
+            // game before the layout settled. With a large library that was
+            // tens of seconds at startup and a pile of memory
+            height: Math.max(1, itemHeight);
         }
     }
 
@@ -375,17 +376,22 @@ Item {
             property bool loadFailed: false;
 
             source: loadFailed
-                ? (compactDeviceArt ? '../../assets/images/devicesCompact/default.png' : '../../assets/images/devices/default.png')
-                : (compactDeviceArt ? '../../assets/images/devicesCompact/' : '../../assets/images/devices/') + collectionData.getImage(currentShortName) + '.png';
+                ? '../../assets/images/devices/default.png'
+                : '../../assets/images/devices/' + collectionData.getImage(currentShortName) + '.png';
             fillMode: Image.PreserveAspectFit;
             asynchronous: true;
             smooth: true;
+            // mipmap keeps the downscale from looking jagged
+            mipmap: true;
             // the bundled device art goes up to 2570x2208 - about 22MB of
-            // pixels - for something drawn a few hundred pixels wide. Bound
-            // to this panel's geometry, which doesn't change as consoles are
-            // highlighted, so switching console never re-triggers a load
-            sourceSize.width: Math.round(parent.width * .65);
-            sourceSize.height: Math.round(parent.height * .65);
+            // pixels - for something drawn a few hundred pixels wide. Decode
+            // once at the final *physical* pixel size (logical size x device
+            // pixel ratio), so the art is only ever scaled down, never up.
+            // Bound to this panel's geometry, which doesn't change as
+            // consoles are highlighted, so switching console never
+            // re-triggers a load
+            sourceSize.width: Math.round(parent.width * .65 * Screen.devicePixelRatio);
+            sourceSize.height: Math.round(parent.height * .65 * Screen.devicePixelRatio);
             width: parent.width * .65;
             height: parent.height * .65;
             anchors.centerIn: parent;
@@ -411,4 +417,28 @@ Item {
     // sortKey has been pinned to 'sortBy' since the sorting screen was
     // removed, so its text resolved to gameData.lastPlayedText, which was
     // itself hardcoded empty - the element rendered an empty string forever.
+
+    // one game per swipe: dragging up selects the next game, down the previous
+    Swipe.SwipePager {
+        id: gamesPager;
+
+        horizontal: false;
+        follow: false;
+        viewActive: gameScrollRoot.modeActive && gameScrollRoot.active;
+        onStepRequested: {
+            const updated = updateGameIndex(currentGameIndex + step);
+            if (updated) sounds.nav();
+        }
+    }
+
+    // the mouse wheel scrolls the list and leaves the selection alone, which
+    // a non-interactive list would otherwise ignore the wheel for
+    Swipe.WheelScroller {
+        view: gamesListView;
+        // whenever this list is the one on screen, not only while it has
+        // focus: in Sidebar mode the console sidebar usually has it, and the
+        // wheel should still scroll the games beside it
+        active: gamesPager.paging && gameScrollRoot.modeActive;
+        pixelsPerNotch: itemHeight * 1.5;
+    }
 }

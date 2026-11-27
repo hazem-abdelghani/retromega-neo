@@ -16,7 +16,7 @@ Item {
 
     function onAcceptPressed() {
         nameFilter = nameFilterModal.textInput.text;
-        nameFilterModal.anchors.topMargin = root.height;
+        nameFilterModal.anchors.topMargin = safeArea.height;
         // delayed so the slide-down close animation gets to play out before
         // this whole screen (and the search box with it) disappears
         closeTimer.restart();
@@ -24,7 +24,7 @@ Item {
     }
 
     function onCancelPressed() {
-        nameFilterModal.anchors.topMargin = root.height;
+        nameFilterModal.anchors.topMargin = safeArea.height;
         closeTimer.restart();
         sounds.back();
     }
@@ -110,7 +110,7 @@ Item {
 
         anchors {
             top: parent.top;
-            topMargin: root.height;
+            topMargin: safeArea.height;
             left: parent.left;
             right: parent.right;
         }

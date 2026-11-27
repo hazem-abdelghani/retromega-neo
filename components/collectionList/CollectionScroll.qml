@@ -1,5 +1,7 @@
 import QtQuick 2.15
 
+import '../swipe' as Swipe
+
 Item {
     property int collectionCount: allCollections.length;
     property alias collectionListView: collectionListView;
@@ -42,20 +44,6 @@ Item {
         }
     }
 
-    // dots
-    PageIndicator {
-        currentIndex: collectionListView.currentIndex;
-        pageCount: collectionCount;
-        width: parent.width * .85;
-        height: parent.height * .01;
-
-        anchors {
-            horizontalCenter: parent.horizontalCenter;
-            bottom: parent.bottom;
-            bottomMargin: 25;
-        }
-    }
-
     ListView {
         id: collectionListView;
 
@@ -71,11 +59,61 @@ Item {
         spacing: 50;
         anchors.fill: parent;
 
+        // With Swipe Paging on, the pager below handles drags (one collection
+        // per swipe, like paging through photos) so the view itself doesn't
+        // coast. The pager slides the whole list with the finger/mouse via
+        // this transform, then currentIndex's own animation finishes the job
+        interactive: !swipePager.paging;
+        // keep the neighbouring collections alive so they're there to be
+        // dragged into view
+        cacheBuffer: width + spacing;
+
+        transform: Translate { x: swipePager.offset; }
+
         onCurrentIndexChanged: {
             if (currentIndex !== currentCollectionIndex) {
                 const updated = updateCollectionIndex(currentIndex, true);
                 if (updated && !muteStartup) sounds.nav();
             }
+        }
+    }
+
+    // dots
+    // after the list so it sits on top of it and receives taps
+    PageIndicator {
+        currentIndex: collectionListView.currentIndex;
+        pageCount: collectionCount;
+        onPageSelected: collectionListView.currentIndex = index;
+        width: parent.width * .85;
+        height: parent.height * .01;
+
+        anchors {
+            horizontalCenter: parent.horizontalCenter;
+            bottom: parent.bottom;
+            bottomMargin: 25;
+        }
+    }
+
+    // one collection per swipe; dragging left shows the next collection
+    Swipe.SwipePager {
+        id: swipePager;
+
+        horizontal: true;
+        follow: true;
+        pageSize: collectionListView.width + collectionListView.spacing;
+        canGo: function(step) {
+            const next = collectionListView.currentIndex + step;
+            return next >= 0 && next < collectionListView.count;
+        }
+        onStepRequested: collectionListView.currentIndex += step;
+    }
+
+    // the mouse wheel, which a non-interactive list ignores: one collection
+    // per notch, the same step a swipe takes
+    Swipe.WheelStepper {
+        active: swipePager.enabledPaging;
+        onStepRequested: {
+            if (swipePager.canGo(step)) collectionListView.currentIndex += step;
         }
     }
 

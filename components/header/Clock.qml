@@ -81,7 +81,11 @@ Item {
             }
 
             MouseArea {
+
+                cursorShape: Qt.PointingHandCursor;
                 anchors.fill: parent;
+                // reaches past the time, which is a third of the header tall
+                anchors.margins: theme.largeTargets ? -clockRoot.height * .2 : 0;
                 onClicked: {
                     settings.toggle('twentyFourHour');
                 }

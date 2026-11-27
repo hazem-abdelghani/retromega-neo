@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 import QtGraphicalEffects 1.12
 
 // "Cards Screenshot Preview" setting - on by default. A panel fades in over
@@ -182,6 +183,7 @@ Item {
             fillMode: Image.PreserveAspectFit;
             asynchronous: true;
             smooth: true;
+            mipmap: true;
             cache: true;
             visible: false;
             // starts decoding as soon as preloadSrc is set, well before the
@@ -193,7 +195,8 @@ Item {
             // above needs. Setting both axes would let this decode at a
             // guessed 16:9 shape instead, feeding the guess back into
             // itself.
-            sourceSize.height: Math.round(screenshotPreviewRoot.height * .32);
+            // x devicePixelRatio: decode at the final physical pixel size
+            sourceSize.height: Math.round(screenshotPreviewRoot.height * .32 * Screen.devicePixelRatio);
         }
 
         Rectangle {

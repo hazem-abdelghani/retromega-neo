@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 import QtGraphicalEffects 1.12
 
 Item {
@@ -19,8 +20,11 @@ Item {
     // note on GameGrid's gridImage. Nothing here reads sourceSize back, so
     // the caveat about it reporting the requested bound rather than the
     // art's real dimensions doesn't bite.
-    readonly property int decodeWidth: Math.round(width * .75);
-    readonly property int decodeHeight: Math.round(height * .75);
+    //
+    // x devicePixelRatio: decode at the final *physical* pixel size, so the
+    // art is only ever scaled down and stays sharp on high-DPI screens
+    readonly property int decodeWidth: Math.round(width * .75 * Screen.devicePixelRatio);
+    readonly property int decodeHeight: Math.round(height * .75 * Screen.devicePixelRatio);
 
     visible: {
         if (!active) return false;
@@ -120,11 +124,11 @@ Item {
         anchors.centerIn: parent;
 
         onStatusChanged: {
-            if (status == Image.Null) {
+            if (status === Image.Null) {
                 failed = true;
             }
 
-            if (status == Image.Error) {
+            if (status === Image.Error) {
                 failed = true;
             }
 

@@ -18,7 +18,7 @@ Item {
     }
 
     // resolves a shortName to the filename (without .png) used in
-    // assets/images/devices/ and assets/images/devicesCompact/
+    // assets/images/devices/
     function getImage(shortName) {
         const alias = getAlias(shortName);
         if (alias === 'default') return shortName;
