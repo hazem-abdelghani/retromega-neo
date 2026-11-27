@@ -1,3 +1,4 @@
+![Retro Mega Neo](.meta/Logo/Retro-Mega-Neo-Logo.png)
 # Retro Mega Neo
 
 A clean, fast [Pegasus](https://pegasus-frontend.org) theme for handhelds, desktops and TVs. It works with a
